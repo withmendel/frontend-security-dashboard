@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OTP Bank - Front-end Security Dashboard</title>
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
+        #blocklyDiv { height: 300px; width: 100%; border: 1px solid #ccc; background: white; }
+        #output { margin-top: 20px; padding: 15px; background: #fff; border-left: 5px solid #007bff; }
+        .suspicious { border-left-color: #dc3545 !important; color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>Front-end Security Rule Builder</h1>
+    <p>Drag blocks to define what constitutes "suspicious" behavior. The AI backend will validate against real logs.</p>
+    
+    <div id="blocklyDiv"></div>
+    <button onclick="runAudit()" style="margin-top:10px; padding:10px 20px; cursor:pointer;">Run Security Audit</button>
+    
+    <div id="output">Waiting for audit...</div>
+
+    <script>
+        // 1. Define Blockly Blocks
+        Blockly.Blocks['check_speed'] = {
+            init: function() {
+                this.appendValueInput("VALUE")
+                    .setCheck("Number")
+                    .appendField("Click speed (ms) less than");
+                this.setOutput(true, "Boolean");
+                this.setColour(230);
+            }
+        };
+        Blockly.Blocks['check_fill_time'] = {
+            init: function() {
+                this.appendValueInput("VALUE")
+                    .setCheck("Number")
+                    .appendField("Form fill time (s) less than");
+                this.setOutput(true, "Boolean");
+                this.setColour(230);
+            }
+        };
+
+        // 2. Inject Blockly
+        Blockly.inject('blocklyDiv', {
+            toolbox: {
+                kind: 'flyoutToolbox',
+                contents: [
+                    {kind: 'block', type: 'check_speed'},
+                    {kind: 'block', type: 'check_fill_time'},
+                    {kind: 'block', type: 'math_number', fields: {NUM: 100}}
+                ]
+            }
+        });
+
+        // 3. Simulate sending data to backend (Mocking the AI call)
+        function runAudit() {
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = "Analyzing...";
+            outputDiv.classList.remove('suspicious');
+
+            // In a real app, you'd parse the Blockly XML to build the rule.
+            // For this demo, we simulate a suspicious log.
+            const mockLog = {
+                click_speed: 50,   // Very fast
+                fill_time: 2,      // Very fast
+                mouse_moves: 5     // Very few
+            };
+
+            fetch('/api/analyze', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(mockLog)
+            })
+            .then(response => response.json())
+            .then(data => {
+                outputDiv.innerHTML = `<strong>Result:</strong> ${data.message}`;
+                if(data.is_suspicious) outputDiv.classList.add('suspicious');
+            });
+        }
+    </script>
+</body>
+</html>
